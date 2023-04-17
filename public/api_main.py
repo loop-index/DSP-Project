@@ -1,5 +1,5 @@
-from flask import Flask, request
-import db_main, cluster, grouping
+from flask import Flask, request, jsonify
+import db_main, cluster, grouping, json, api
 
 app = Flask(__name__)
 
@@ -7,11 +7,21 @@ app = Flask(__name__)
 def hello_world():
     return 'Hello, World!'
 
+@app.route('/users')
+def get_users():
+    users = db_main.get_all_users()
+    response = {}
+    for user in users:
+        response[user[0]] = api.user_response(user)
+    return jsonify(response)
+
 @app.route('/user/<id>')
 def get_user(id):
-    interests = db_main.query('SELECT interests FROM users WHERE user_id = ' + id)
-    groups = [grouping.insert_category(interest) for interest in interests]
-    return str(groups)
+    return jsonify(api.user_response(db_main.get_by_id(id)))
+
+@app.route('/groups')
+def get_groups():
+    return str(grouping.get_categories())
 
 def run_server():
     app.run()

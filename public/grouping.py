@@ -1,7 +1,7 @@
 from gensim.models import KeyedVectors
 import db_main, json
 
-model = KeyedVectors.load_word2vec_format('public\w2v.bin', binary=True, limit=50000)
+model = KeyedVectors.load_word2vec_format('public/w2v.bin', binary=True, limit=50000)
 
 # interest_set = set()
 # categories = {}
