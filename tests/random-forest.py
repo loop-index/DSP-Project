@@ -5,16 +5,9 @@ from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error, f1_score
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
 from sklearn.preprocessing import LabelEncoder
-from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassifier
-from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
-from sklearn.neural_network import MLPRegressor
-from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV, RandomizedSearchCV
-from sklearn.compose import ColumnTransformer
-from sklearn.preprocessing import OneHotEncoder, StandardScaler
-from sklearn.pipeline import Pipeline
 import joblib
-import csv, json, time
+import csv, json, time, matplotlib
 
 # Load datasets
 # users = pd.read_csv("./raw/users.csv", nrows=500)
@@ -28,11 +21,11 @@ try:
         raise Exception('Retrain model')
 
     starting_time = time.time()
-    clf = joblib.load('tests\\save\\model.pkl') # Fix this path
-    categories = pd.read_csv('tests\\save\\columns.csv')
-    gender_enc = joblib.load('tests\\save\\gender_enc.pkl')
-    age_enc = joblib.load('tests\\save\\age_enc.pkl')
-    total_all_categories = pd.read_csv('tests\\save\\total_all_categories.csv')
+    clf = joblib.load('tests/save/model.pkl') # Fix this path
+    categories = pd.read_csv('tests/save/columns.csv')
+    gender_enc = joblib.load('tests/save/gender_enc.pkl')
+    age_enc = joblib.load('tests/save/age_enc.pkl')
+    total_all_categories = pd.read_csv('tests/save/total_all_categories.csv')
     print("Loaded model after", time.time() - starting_time, "seconds")
 
 except:
@@ -76,36 +69,6 @@ except:
     # Split the data into training and testing sets
     X_train, X_test, y_train, y_test = train_test_split(merged_data, active_seconds, test_size=0.01, random_state=42)
 
-    # Number of trees in random forest
-    n_estimators = [int(x) for x in np.linspace(start = 200, stop = 2000, num = 10)]
-    # Number of features to consider at every split
-    max_features = ['auto', 'sqrt']
-    # Maximum number of levels in tree
-    max_depth = [int(x) for x in np.linspace(10, 110, num = 11)]
-    max_depth.append(None)
-    # Minimum number of samples required to split a node
-    min_samples_split = [2, 5, 10]
-    # Minimum number of samples required at each leaf node
-    min_samples_leaf = [1, 2, 4]
-    # Method of selecting samples for training each tree
-    bootstrap = [True, False]
-    # Create the random grid
-    random_grid = {'n_estimators': n_estimators,
-                'max_features': max_features,
-                'max_depth': max_depth,
-                'min_samples_split': min_samples_split,
-                'min_samples_leaf': min_samples_leaf,
-                'bootstrap': bootstrap}
-
-    # Define the parameter grid to search
-    param_grid = {
-        'n_estimators': n_estimators,
-        'max_depth': max_depth,
-        'min_samples_split': min_samples_split,
-        'min_samples_leaf': min_samples_leaf,
-        'bootstrap': bootstrap,
-    }
-
     # clf = RandomForestRegressor(n_estimators=100, min_samples_split=10, min_samples_leaf=1, max_features='sqrt', max_depth=80, bootstrap=False)
     clf = RandomForestRegressor()
     # clf = MLPRegressor(hidden_layer_sizes=(100, 100, 100), max_iter=500, activation='relu', solver='adam', random_state=42)
@@ -134,11 +97,11 @@ except:
 
     # Save the model
     starting_time = time.time()
-    joblib.dump(clf, 'tests\\save\\model.pkl')
-    total_all_categories.to_csv('tests\\save\\total_all_categories.csv', index=False)
-    categories.to_csv('tests\\save\\columns.csv', index=False)
-    joblib.dump(gender_enc, 'tests\\save\\gender_enc.pkl')
-    joblib.dump(age_enc, 'tests\\save\\age_enc.pkl')
+    joblib.dump(clf, 'tests/save/model.pkl')
+    total_all_categories.to_csv('tests/save/total_all_categories.csv', index=False)
+    categories.to_csv('tests/save/columns.csv', index=False)
+    joblib.dump(gender_enc, 'tests/save/gender_enc.pkl')
+    joblib.dump(age_enc, 'tests/save/age_enc.pkl')
     print("Saved model after", time.time() - starting_time, "seconds")
 
 
