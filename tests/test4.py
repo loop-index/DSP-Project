@@ -9,6 +9,9 @@ from sklearn.linear_model import LinearRegression, LogisticRegression, SGDClassi
 from sklearn.multioutput import MultiOutputRegressor, MultiOutputClassifier
 from sklearn.metrics import accuracy_score
 from sklearn.model_selection import GridSearchCV
+from sklearn.compose import ColumnTransformer
+from sklearn.preprocessing import OneHotEncoder, StandardScaler
+from sklearn.pipeline import Pipeline
 import joblib
 import csv, json, time
 
@@ -34,7 +37,7 @@ except:
     starting_time = time.time()
     users = pd.read_csv("./raw/users.csv")
     browsing = pd.read_csv("./raw/browsing.csv", usecols=['panelist_id', 'domain', 'active_seconds'])
-    domains = pd.read_csv("./raw/domain_categories.csv").sample(frac=0.1)
+    domains = pd.read_csv("./raw/domain_categories.csv").sample(frac=1, random_state=42)
     all_categories = pd.read_csv("./raw/categories.csv")
 
     print("Loaded datasets after", time.time() - starting_time, "seconds")
@@ -44,16 +47,18 @@ except:
     merged_data = pd.merge(browsing, users, on="panelist_id")
     browsing = None
     users = None
-    merged_data = pd.merge(merged_data, domains, on="domain")
+    merged_data = pd.merge(merged_data, domains[['domain', 'category']], on="domain")
     domains = None
     merged_data = merged_data[["gender", "age_recode", "category", "active_seconds"]]
-
-    # Drop rows with missing values
-    merged_data = merged_data.dropna()
 
     # Split categories string into dummies
     # categories = merged_data['category'].str.get_dummies(sep=',')
     # merged_data = pd.concat([merged_data.drop(['category']), categories], axis=1)
+    # Sum the seconds of each group of categories
+    merged_data = merged_data.groupby(['gender', 'age_recode', 'category'])['active_seconds'].sum().reset_index()
+    
+    # Drop rows with missing values
+    merged_data = merged_data.dropna()
     merged_data = merged_data.join(merged_data['category'].str.get_dummies(sep=','))
 
     # merged_data = pd.concat([merged_data, categories], axis=1)
@@ -78,33 +83,36 @@ except:
 
     # Define the parameter grid to search
     param_grid = {
-        'max_depth': [2, 4, 6, 8, 10],
-        'min_samples_split': [2, 5, 10, 15, 20],
-        'min_samples_leaf': [1, 2, 4, 8, 16],
-        'max_features': ['auto', 'sqrt', 'log2']
+        'n_estimators': [100, 200, 300], # Number of trees in the forest
+        'max_depth': [None, 5, 10], # Maximum depth of the tree
+        'min_samples_split': [2, 5, 10], # Minimum number of samples required to split an internal node
+        'min_samples_leaf': [1, 2, 4], # Minimum number of samples required to be at a leaf node
+        'max_features': ['auto', 'sqrt', 'log2'], # Number of features to consider when looking for the best split
+        'random_state': [42] # Random state for reproducibility
     }
 
     # Choose a machine learning algorithm
     # clf = MultiOutputClassifier(DecisionTreeClassifier(criterion='gini', max_depth=10, min_samples_leaf=1, min_samples_split=2))
-    clf = LogisticRegression()
+    # clf = LogisticRegression()
+    clf = RandomForestRegressor()
     # clf = DecisionTreeClassifier(criterion='gini', max_depth=10, min_samples_leaf=1, min_samples_split=2)
     # clf = DecisionTreeRegressor(criterion='poisson', max_depth=10, min_samples_leaf=1, min_samples_split=2)
 
     # # Create a GridSearchCV object
-    # grid_search = GridSearchCV(clf, param_grid, cv=5)
+    # grid_search = GridSearchCV(clf, param_grid, cv=5, scoring='neg_mean_squared_error', verbose=1)
     # grid_search.fit(X_train, y_train)
 
     # # Print the best parameters and best score
     # print("Best parameters: ", grid_search.best_params_)
     # print("Best score: ", grid_search.best_score_)
 
-    # DecisionTreeClassifier for age_recode
-    # Best parameters:  {'criterion': 'gini', 'max_depth': 10, 'min_samples_leaf': 1, 'min_samples_split': 2}
-    # Best score:  0.348659761951588
+        # DecisionTreeClassifier for age_recode
+        # Best parameters:  {'criterion': 'gini', 'max_depth': 10, 'min_samples_leaf': 1, 'min_samples_split': 2}
+        # Best score:  0.348659761951588
 
-    # LogisticRegression for age 
-    # Best parameters:  {'C': 1, 'penalty': 'l2', 'solver': 'saga'}
-    # Best score:  0.3618551300281496
+        # LogisticRegression for age 
+        # Best parameters:  {'C': 1, 'penalty': 'l2', 'solver': 'saga'}
+        # Best score:  0.3618551300281496
 
     # Train the model
     starting_time = time.time()

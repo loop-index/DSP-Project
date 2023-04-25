@@ -2,7 +2,6 @@ public/GoogleNews-vectors-negative300.bin
 public/glove.6B.50d.txt
 raw/
 raw.zip
-age_enc.pkl
-columns.csv
-gender_enc.pkl
-model.pkl
+tests/save/*.pkl
+tests/save/*.csv
+data/video-ad-exhibitions.csv
