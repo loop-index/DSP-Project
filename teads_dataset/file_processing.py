@@ -8,6 +8,8 @@ import newspaper
 from newspaper import Article, Config
 from gensim.models import KeyedVectors
 from nltk.corpus import stopwords
+from translate import Translator
+import re
 
 nlp = spacy.load("en_core_web_sm")
 w2v = KeyedVectors.load_word2vec_format('public/w2v.bin', binary=True, limit=50000)
@@ -101,9 +103,83 @@ def get_domain_text(link):
 
         return (source_type, words, ','.join(sorted(res, key=lambda x: ranks[x])[:5]))
 
+def translate(text):
+    try:
+        ts = Translator(to_lang='en')
+        return ts.translate(text)
+    except:
+        return None
+ 
+def get_article(link):
+    config = Config()
+    config.browser_user_agent = choice(user_agents)
+    url = 'https://' + link
+    try:
+        a = Article(url, config=config)
+        a.download()
+        a.parse()
+        meta_description = a.meta_description.split()
+        if (len(meta_description) > 0 or (len(a.meta_keywords) > 0 and a.meta_keywords[0] != '')):
+            return a.title, meta_description, a.meta_keywords
+        else:
+            try:
+                a.nlp()
+                return a.title, a.summary.split(), a.keywords
+            except:
+                return None
+    except:
+        return None
+    
+def get_source(link):
+    config = Config()
+    config.browser_user_agent = choice(user_agents)
+    url = 'https://' + link.split('/')[0]
+    try:
+        n = newspaper.build(url, config=config)
+        return n.brand, translate(n.description).split(), []
+    except:
+        return None
+
+def get_keywords(link):
+    tup = get_article(link)
+    # return tup
+    if tup:
+        words = [re.sub(r'[^\w\s]', '', word.lower()) for word in tup[1]]
+        words = [word for word in words if word not in stopwords.words('english')] + [word.lower() for word in tup[2] if word.lower() not in stopwords.words('english')]
+        return tup[0], text_to_categories(words)
+    else:
+        return None
+    
+def text_to_categories(text):
+    words = text
+    if len(words) == 0:
+        return 'uncategorized'
+    
+    ranks = {}
+
+    for category in categories:
+        sim = w2v.n_similarity(category.split(), words)
+        ranks[category] = sim
+
+    res = []
+    for key in ranks:
+        if ranks[key] > 0.305:
+            res.append(key.replace(' ', ''))
+
+    if len(res) == 0:
+        key = max(ranks, key=ranks.get).replace(' ', '')
+        res.append(key)
+        # res.append('uncategorized')
+
+    # res = sorted(res, key=lambda x: ranks[x], reverse=True)
+    # count = math.ceil(len(res) / 5)
+    # res = res[:count]
+
+    return ','.join(res)
+
 data = pd.read_csv('teads_dataset/dataset_processed.csv', nrows=10)
 # print(data[data['ua_country'] != 'us'])
 # print(data.groupby('referer_deep_three')['retention'].mean().sort_values(ascending=False))
-data = data.loc[[1]]
-print(data)
-data['referer_deep_three'] = data['referer_deep_three'].apply(lambda x: print(get_domain_text(x)))
+# data = data.loc[[1]]
+# print(data)
+data['referer_deep_three'] = data['referer_deep_three'].apply(lambda x: print(get_keywords(x)))

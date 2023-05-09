@@ -6,3 +6,5 @@ tests/save/*
 data/video-ad-exhibitions.csv
 teads_dataset/*.csv
 bids_dataset/US-market
+dataset*
+fake_dataset/fake_dataset.csv
