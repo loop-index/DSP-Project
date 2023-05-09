@@ -4,5 +4,5 @@ raw/
 raw.zip
 tests/save/*
 data/video-ad-exhibitions.csv
+teads_dataset/*.csv
 bids_dataset/US-market
-teads_dataset\dataset.csv
