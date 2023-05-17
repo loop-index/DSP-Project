@@ -9,3 +9,4 @@ https://datarade.ai/data-products/lifesight-web-data
 
 https://contest.ipinyou.com
 http://contest.ipinyou.com/ipinyou-dataset.pdf
+https://figshare.com/articles/dataset/ipinyou_contest_dataset_season2/5732328/1
