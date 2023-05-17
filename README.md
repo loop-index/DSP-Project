@@ -6,3 +6,6 @@ https://code.google.com/archive/p/open-advertising-dataset/
 https://github.com/marianavsarantes/video-ads-dataset
 https://app.mobito.io/data-product/web-data-graph
 https://datarade.ai/data-products/lifesight-web-data
+
+https://contest.ipinyou.com
+http://contest.ipinyou.com/ipinyou-dataset.pdf
