@@ -3,12 +3,10 @@ import numpy as np
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 import time
 import joblib
-import db_main
+from .. import db_main
 import random
 
 # Load datasets
-
-
 def load_models():
     try:
         model = joblib.load('public/ipinyou/models/ctr_model.pkl')

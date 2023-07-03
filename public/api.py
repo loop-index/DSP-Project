@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
-import db_main, json
+import json
+from public import db_main
 
 def user_response(user):
     return {
