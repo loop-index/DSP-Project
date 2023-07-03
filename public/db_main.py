@@ -1,8 +1,12 @@
 import mysql.connector
 
+# connection = mysql.connector.connect(
+#     user='root', password='1234',
+#     host='localhost', database='test')
+
 connection = mysql.connector.connect(
-    user='root', password='1234',
-    host='localhost', database='test')
+    user='exkl3fs6sjnbivs2', password='i83z9ie63otjcfx3',
+    host='ble5mmo2o5v9oouq.cbetxkdyhwsb.us-east-1.rds.amazonaws.com', database='ivbirjvzd9bn1dbf')
 
 cursor = connection.cursor()
 
