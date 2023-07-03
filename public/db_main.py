@@ -48,3 +48,31 @@ def get_advertisers_with_active_campaigns():
 def get_campaign_from_advertiser(advertiser_id):
     cursor.execute('SELECT campaign_id, name FROM campaign WHERE advertiser_id = %s AND start_date <= CURDATE() AND end_date >= CURDATE() AND status = \'Active\'', (advertiser_id,))
     return cursor.fetchall()
+
+def get_min_impression_campaign_from_advertiser(advertiser_id):
+    cursor.execute('SELECT campaign_id, name FROM campaign WHERE \
+                   impression = (SELECT MIN(impression) FROM campaign) AND advertiser_id = %s AND start_date <= CURDATE() \
+                   AND end_date >= CURDATE() AND status = \'Active\'', (advertiser_id,))
+    return cursor.fetchall()
+
+def get_min_click_campaign_from_advertiser(advertiser_id):
+    cursor.execute('SELECT campaign_id, name FROM campaign WHERE \
+                   click = (SELECT MIN(click) FROM campaign) AND advertiser_id = %s AND start_date <= CURDATE() \
+                   AND end_date >= CURDATE() AND status = \'Active\'', (advertiser_id,))
+    return cursor.fetchall()
+
+def get_all_ads():
+    cursor.execute('select a.ad_id, a.creative_url, a.summary, c.name, av.name, av.type from \
+                   (ad a inner join campaign c on (a.campaign_id = c.campaign_id)) inner join advertiser av on c.advertiser_id = av.advertiser_id')
+    return cursor.fetchall()
+
+def get_ad_from_campaign(campaign_id):
+    cursor.execute('select a.ad_id, a.summary, c.name as campaign, av.name as advertiser, a.impression, a.click from \
+                   (ad a inner join campaign c on (a.campaign_id = c.campaign_id)) \
+                   inner join advertiser av on c.advertiser_id = av.advertiser_id where a.campaign_id = %s order by a.impression asc', (campaign_id,))
+    return cursor.fetchall()
+
+def update_ad_impression(ad_id):
+    cursor.execute('UPDATE ad SET impression = impression + 1 WHERE ad_id = %s', (ad_id,))
+    cursor.execute('UPDATE campaign SET impression = impression + 1 WHERE campaign_id = (SELECT campaign_id FROM ad WHERE ad_id = %s)', (ad_id,))
+    connection.commit()

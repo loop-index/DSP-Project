@@ -5,23 +5,27 @@ from sklearn.model_selection import train_test_split, GridSearchCV
 from sklearn.ensemble import RandomForestClassifier, RandomForestRegressor
 from sklearn.metrics import accuracy_score, mean_squared_error, f1_score
 from sklearn.multioutput import MultiOutputClassifier, MultiOutputRegressor
-import time, joblib
+import time
+import joblib
 
 # Load datasets
 try:
     prompt = input('Do you want to retrain the model? (y/N): ')
     if prompt == 'y':
         raise Exception('Retrain model')
-    
+
     model = joblib.load('ipinyou/models/ctr_model.pkl')
     user_columns = pd.read_csv('ipinyou/models/ctr_columns.csv').columns
 
 except:
-    imps = pd.read_csv("ipinyou/data/imp.20130612.txt", sep='\t', header=None, usecols=[0, 17, 19, 20, 22, 23], nrows=1000000)
+    imps = pd.read_csv("ipinyou/data/imp.20130612.txt", sep='\t',
+                       header=None, usecols=[0, 17, 19, 20, 22, 23], nrows=1000000)
     imps = imps.dropna()
-    imps.columns = ['BidID', 'FloorPrice', 'Bid', 'Paid', 'AdvertiserID', 'UserTags']
+    imps.columns = ['BidID', 'FloorPrice', 'Bid',
+                    'Paid', 'AdvertiserID', 'UserTags']
 
-    clicks = pd.read_csv("ipinyou/data/clk.20130612.txt", sep='\t', usecols=[0], header=None)
+    clicks = pd.read_csv("ipinyou/data/clk.20130612.txt",
+                         sep='\t', usecols=[0], header=None)
     clicks.columns = ['BidID']
     clicks['Clicked'] = 1
 
@@ -55,11 +59,12 @@ except:
     print("Accuracy:", model.score(X, y))
 
     joblib.dump(model, 'ipinyou/models/ctr_model.pkl')
-    pd.DataFrame(columns=user_columns).to_csv('ipinyou/models/ctr_columns.csv', index=False)
+    pd.DataFrame(columns=user_columns).to_csv(
+        'ipinyou/models/ctr_columns.csv', index=False)
 
 ###################################################
 
-advertisers = {1458: 'Chinese vertical e-commerce', 3358: 'Software', 3386: 'International e-commerce', 3427: 'Oil', 3476: 'Tire', 2259: 'Milk powder', 
+advertisers = {1458: 'Chinese vertical e-commerce', 3358: 'Software', 3386: 'International e-commerce', 3427: 'Oil', 3476: 'Tire', 2259: 'Milk powder',
                2261: 'Telecom', 2821: 'Footwear', 2997: 'Mobile e-commerce app install'}
 
 while True:
@@ -67,7 +72,8 @@ while True:
 
     # Create a dataframe with the input data
     input_data = pd.DataFrame({'AdvertiserID': 0}, index=[0], dtype='int64')
-    input_data = input_data.join(pd.DataFrame(columns=user_columns, data=np.zeros((1, len(user_columns)))))
+    input_data = input_data.join(pd.DataFrame(
+        columns=user_columns, data=np.zeros((1, len(user_columns)))))
 
     # Set the user tags to 1
     for tag in user:
@@ -89,5 +95,3 @@ while True:
     print("Max CTR:", max_advertiser + ':', '{:.2%}'.format(max_ctr))
 
     print("Time taken:", '{:.2f}ms'.format((time.time() - start) * 1000))
-
-

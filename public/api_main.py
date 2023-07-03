@@ -1,6 +1,6 @@
 import time
 from flask import Flask, request, jsonify
-import db_main, json, api, utils
+import db_main, json, api, utils, re, requests
 from ipinyou import predictor, bidder
 
 app = Flask(__name__)
@@ -25,26 +25,30 @@ def get_user(id):
 def get_groups():
     pass
 
-@app.route('/ad_request', methods=['POST'])
+@app.route('/ad_request')
 def ad_request():
-    if request.method == 'POST':
-        start = time.time()
-        data = request.get_json()
-        user_tags = data['user_tags'].split(',')
-        floor_price = data['floor_price']
+    start = time.time()
+    data = request.args
+    user_tags = data['user_tags'].split(',')
+    floor_price = data['floor_price']
 
-        advertiserResult = predictor.get_advertiser_for(user_tags, floor_price)
-        bidResult = bidder.get_bid(user_tags, floor_price, advertiserResult['advertiserID'], advertiserResult['ctr'])
+    advertiserResult = predictor.get_advertiser_for(user_tags, floor_price)
+    bidResult = bidder.get_bid(user_tags, floor_price, advertiserResult['advertiserID'], advertiserResult['ctr'])
 
-        return jsonify({
-            'advertiserID': advertiserResult['advertiserID'],
-            'advertiser': advertiserResult['advertiser'],
-            'campaignID': advertiserResult['campaignID'],
-            'campaign': advertiserResult['campaign'],
-            'bid': '{:.2f}$'.format(utils.convert_cost(bidResult['bid'])),
-            'ctr': '{:.2f}%'.format(advertiserResult['ctr']),
-            'time': '{:.2f}ms'.format((time.time() - start)*1000),
-        })
+    db_main.update_ad_impression(advertiserResult['adID'])
+    return jsonify({
+        'advertiserID': advertiserResult['advertiserID'],
+        'advertiser': advertiserResult['advertiser'],
+        'campaignID': advertiserResult['campaignID'],
+        'campaign': advertiserResult['campaign'],
+        'adID': advertiserResult['adID'],
+        'adText': advertiserResult['adText'],
+        'bid': '{:.2f}$'.format(utils.convert_cost(bidResult['bid'])),
+        'ctr': '{:.2f}%'.format(advertiserResult['ctr']),
+        'time': '{:.2f}ms'.format((time.time() - start)*1000),
+    })
+
+    # return (utils.ad_html(advertiserResult['advertiser'], advertiserResult['campaign'], advertiserResult['adText']))
 
 def run_server():
     app.run(debug=True)
