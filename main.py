@@ -1,5 +1,6 @@
 import signal, time, json, re, requests
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 from public.ipinyou import predictor, bidder
 from public import utils, api, db_main
 
@@ -19,6 +20,7 @@ def stop_server():
         shutdown_func()
 
 app = Flask(__name__)
+cors = CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5500"}})
 
 @app.route('/')
 def hello_world():
