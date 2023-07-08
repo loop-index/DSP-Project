@@ -20,7 +20,7 @@ def stop_server():
         shutdown_func()
 
 app = Flask(__name__)
-cors = CORS(app, resources={r"/*": {"origins": "http://127.0.0.1:5500"}})
+cors = CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:5500", "https://portfolio-a40fe.web.app", "https://portfolio-a40fe.firebaseapp.com"]}})
 
 @app.route('/')
 def hello_world():
