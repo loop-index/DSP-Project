@@ -1,5 +1,5 @@
 import signal, time, json, re, requests
-from flask import Flask, request, jsonify
+from flask import Flask, request, jsonify, render_template
 from flask_cors import CORS
 from public.ipinyou import predictor, bidder
 from public import utils, api, db_main
@@ -24,7 +24,7 @@ cors = CORS(app, resources={r"/*": {"origins": ["http://127.0.0.1:5500", "https:
 
 @app.route('/')
 def hello_world():
-    return 'Hello, World!'
+    return render_template('index.html')
 
 @app.route('/users')
 def get_users():
@@ -48,22 +48,26 @@ def ad_request():
     data = request.args
     user_tags = data['user_tags'].split(',')
     floor_price = data['floor_price']
+    number = data['number']
 
-    advertiserResult = predictor.get_advertiser_for(user_tags, floor_price)
-    bidResult = bidder.get_bid(user_tags, floor_price, advertiserResult['advertiserID'], advertiserResult['ctr'])
-
-    db_main.update_ad_impression(advertiserResult['adID'])
-    return jsonify({
-        'advertiserID': advertiserResult['advertiserID'],
-        'advertiser': advertiserResult['advertiser'],
-        'campaignID': advertiserResult['campaignID'],
-        'campaign': advertiserResult['campaign'],
-        'adID': advertiserResult['adID'],
-        'adText': advertiserResult['adText'],
-        'bid': '{:.2f}$'.format(utils.convert_cost(bidResult['bid'])),
-        'ctr': '{:.2f}%'.format(advertiserResult['ctr']),
-        'time': '{:.2f}ms'.format((time.time() - start)*1000),
-    })
+    advertiserResult = predictor.get_advertiser_for(user_tags, floor_price, int(number))
+    result = []
+    for advertiser in advertiserResult:
+        advertiser['bid'] = bidder.get_bid(user_tags, floor_price, advertiser['advertiserID'], advertiser['ctr'])['bid']
+        db_main.update_ad_impression(advertiser['adID'])
+        result.append({
+            'advertiserID': advertiser['advertiserID'],
+            'advertiser': advertiser['advertiser'],
+            'campaignID': advertiser['campaignID'],
+            'campaign': advertiser['campaign'],
+            'adID': advertiser['adID'],
+            'adText': advertiser['adText'],
+            'bid': '{:.2f}$'.format(utils.convert_cost(advertiser['bid'])),
+            'ctr': '{:.2f}%'.format(advertiser['ctr']),
+            'time': '{:.2f}ms'.format((time.time() - start)*1000),
+        })
+        
+    return jsonify(result)
 
     # return (utils.ad_html(advertiserResult['advertiser'], advertiserResult['campaign'], advertiserResult['adText']))
 

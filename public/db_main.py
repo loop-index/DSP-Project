@@ -49,8 +49,16 @@ def get_advertisers_with_active_campaigns():
     cursor.execute('SELECT advertiser_id FROM campaign WHERE start_date <= CURDATE() AND end_date >= CURDATE() AND status = \'Active\'')
     return cursor.fetchall()
 
-def get_campaign_from_advertiser(advertiser_id):
+def get_all_advertisers():
+    cursor.execute('SELECT advertiser_id, name FROM advertiser')
+    return cursor.fetchall()
+
+def get_campaign_from_advertiser_active(advertiser_id):
     cursor.execute('SELECT campaign_id, name FROM campaign WHERE advertiser_id = %s AND start_date <= CURDATE() AND end_date >= CURDATE() AND status = \'Active\'', (advertiser_id,))
+    return cursor.fetchall()
+
+def get_campaign_from_advertiser(advertiser_id):
+    cursor.execute('SELECT campaign_id, name FROM campaign WHERE advertiser_id = %s', (advertiser_id,))
     return cursor.fetchall()
 
 def get_min_impression_campaign_from_advertiser(advertiser_id):

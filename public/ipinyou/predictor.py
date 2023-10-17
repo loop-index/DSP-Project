@@ -65,7 +65,7 @@ def load_models():
 model, user_columns = load_models()
 
 
-def get_advertiser_for(user_tags, floor_price):
+def get_advertiser_for(user_tags, floor_price, number):
     # Create a dataframe with the input data
     input_data = pd.DataFrame({'AdvertiserID': 0}, index=[0], dtype='int64')
     input_data = input_data.join(pd.DataFrame(
@@ -81,7 +81,7 @@ def get_advertiser_for(user_tags, floor_price):
     # max_advertiser = "Random"
 
     advertisers = [a[0]
-                   for a in db_main.get_advertisers_with_active_campaigns()]
+                   for a in db_main.get_all_advertisers()]
     ctr_list = {}
 
     for advertiser in advertisers:
@@ -89,21 +89,27 @@ def get_advertiser_for(user_tags, floor_price):
         pred = model.predict(input_data)[0]
         ctr_list.setdefault(advertiser, pred)
 
-    top_3 = sorted(ctr_list, key=ctr_list.get, reverse=True)[:3]
-    top_advertiser = random.choice(top_3)
+    top_n = sorted(ctr_list, key=ctr_list.get, reverse=True)[:number + 2]
+    top_advertisers = random.sample(top_n, number)
 
-    campaigns = db_main.get_campaign_from_advertiser(top_advertiser)
-    top_campaign = random.choice(campaigns)
+    result = []
+    for top_advertiser in top_advertisers:
+        campaigns = db_main.get_campaign_from_advertiser(top_advertiser)
+        top_campaign = random.choice(campaigns)
 
-    ads = db_main.get_ad_from_campaign(top_campaign[0])
-    ad = ads[0]
+        print(top_advertiser, top_campaign)
+        ads = db_main.get_ad_from_campaign(top_campaign[0])
+        print(ads)
+        ad = ads[0]
 
-    return {
-        'advertiserID': top_advertiser,
-        'ctr': ctr_list[top_advertiser],
-        'campaignID': top_campaign[0],
-        'campaign': top_campaign[1],
-        'adID': ad[0],
-        'adText': ad[1],
-        'advertiser': db_main.get_advertiser_name(top_advertiser),
-    }
+        result.append({
+            'advertiserID': top_advertiser,
+            'ctr': ctr_list[top_advertiser],
+            'campaignID': top_campaign[0],
+            'campaign': top_campaign[1],
+            'adID': ad[0],
+            'adText': ad[1],
+            'advertiser': db_main.get_advertiser_name(top_advertiser),
+        })
+
+    return result
